@@ -3,7 +3,11 @@ import Sidebar from "./Sidebar";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage, db, auth } from "../../firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { getChatMessages, sendMessageToChat, getChatId } from "../../firebase";
+import {
+  getChatMessages,
+  sendMessageToChat,
+  getChatId,
+} from "../../firebase";
 
 const ChatPage = ({ user }) => {
   const [messages, setMessages] = useState([]);
@@ -19,14 +23,15 @@ const ChatPage = ({ user }) => {
     const chatId = getChatId(user.uid, selectedChatUser.uid);
 
     await sendMessageToChat(chatId, inputText, user.uid, user.displayName);
-    setInputText(""); // clear input
+    setInputText("");
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files[0]) {
-      setPhotoFile(e.target.files[0]);
-    }
-  };
+      if (e?.target?.files?.[0]) {
+        setPhotoFile(e.target.files[0]);
+      }
+    };
+    
 
   const handleUploadPhoto = async () => {
     if (!photoFile) return;
@@ -56,19 +61,26 @@ const ChatPage = ({ user }) => {
   }, [selectedChatUser]);
 
   return (
-    <div style={{ display: "flex" }}>
-      <Sidebar onSelectUser={setSelectedChatUser} currentUser={user} />
+    <div style={{ display: "flex", height: "100vh" }}>
+      {/* Sidebar with user list */}
+      <Sidebar
+        user={user}
+        onLogout={() => auth.signOut()}
+        onProfilePhotoChange={handleFileChange}
+        onSelectUser={setSelectedChatUser}
+      />
 
-      <div style={{ flex: 1, padding: "16px" }}>
+      {/* Chat section */}
+      <div style={{ flex: 1, padding: "16px", overflow: "hidden" }}>
         <div>
           <input type="file" onChange={handleFileChange} />
           <button onClick={handleUploadPhoto}>Upload Profile Photo</button>
         </div>
 
-        {selectedChatUser && (
+        {selectedChatUser ? (
           <>
             <h3>Chatting with {selectedChatUser.username}</h3>
-            <div style={{ height: "300px", overflowY: "scroll" }}>
+            <div style={{ height: "300px", overflowY: "scroll", marginTop: "16px" }}>
               {messages.map((msg, i) => (
                 <p key={i}>
                   <strong>{msg.displayName}:</strong> {msg.text}
@@ -76,18 +88,26 @@ const ChatPage = ({ user }) => {
               ))}
               <div ref={messagesEndRef} />
             </div>
-            <input
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Type your message"
-            />
-            <button onClick={handleSendMessage}>Send</button>
+            <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
+              <input
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="Type your message"
+                style={{ flex: 1, padding: "8px" }}
+              />
+              <button onClick={handleSendMessage}>Send</button>
+            </div>
           </>
+        ) : (
+          <div style={{ marginTop: "32px" }}>
+            <h3>Please select a user to start chatting.</h3>
+          </div>
         )}
       </div>
     </div>
   );
 };
+
 
 
 
