@@ -3,6 +3,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase";
 
 const Sidebar = ({ user, onLogout, onProfilePhotoChange, onSelectUser }) => {
+    
   const fileInputRef = useRef(null);
   const [allUsers, setAllUsers] = useState([]);
 
@@ -22,6 +23,9 @@ const Sidebar = ({ user, onLogout, onProfilePhotoChange, onSelectUser }) => {
 
     fetchUsers();
   }, [user.uid]);
+  if (!user) {
+    return <div>Loading...</div>; // Display a loading message while the user is being loaded
+  }
 
   return (
     <div style={styles.sidebar}>
