@@ -26,12 +26,13 @@ const Sidebar = ({ user, onLogout, onProfilePhotoChange, onSelectUser }) => {
   return (
     <div style={styles.sidebar}>
       <div style={styles.profileSection}>
-        <img
-          src={user?.photoURL || "default-profile.png"}
-          alt="Profile"
-          style={styles.avatar}
-          onClick={handleProfileClick}
-        />
+      <img
+  src={user?.photoURL || "default-profile.png"}
+  alt="Profile"
+  style={styles.avatar}
+  onClick={handleProfileClick}
+/>
+
         <input
           type="file"
           accept="image/*"
