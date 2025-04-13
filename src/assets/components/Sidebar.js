@@ -51,10 +51,12 @@ const Sidebar = ({ user, onLogout, onProfilePhotoChange, onSelectUser }) => {
             onClick={() => onSelectUser(chatUser)}
           >
             <img
-              src={chatUser.photoURL || "default-profile.png"}
-              alt={chatUser.username}
-              style={styles.userAvatar}
-            />
+  src={user?.photoURL || "default-profile.png"}
+  alt="Profile"
+  style={styles.avatar}
+  onClick={handleProfileClick}
+/>
+
             <span>{chatUser.username || chatUser.displayName}</span>
           </div>
         ))}

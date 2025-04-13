@@ -63,12 +63,15 @@ const ChatPage = ({ user }) => {
   return (
     <div style={{ display: "flex", height: "100vh" }}>
       {/* Sidebar with user list */}
-      <Sidebar
-        user={user}
-        onLogout={() => auth.signOut()}
-        onProfilePhotoChange={handleFileChange}
-        onSelectUser={setSelectedChatUser}
-      />
+      {user ? (
+  <Sidebar
+    user={user}
+    onLogout={() => auth.signOut()}
+    onProfilePhotoChange={handleFileChange}
+    onSelectUser={setSelectedChatUser}
+  />
+) : null}
+
 
       {/* Chat section */}
       <div style={{ flex: 1, padding: "16px", overflow: "hidden" }}>
