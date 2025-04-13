@@ -1,37 +1,53 @@
 import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "./Sidebar";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { storage, db, auth } from "../../firebase";
-import { doc, updateDoc } from "firebase/firestore";
-import {
-  getChatMessages,
-  sendMessageToChat,
-  getChatId,
-} from "../../firebase";
+import { db, auth, storage } from "../../firebase";
+import { collection, getDocs, query, orderBy, onSnapshot, doc, setDoc, updateDoc } from "firebase/firestore";
 
 const ChatPage = ({ user }) => {
   const [messages, setMessages] = useState([]);
   const [selectedChatUser, setSelectedChatUser] = useState(null);
   const [inputText, setInputText] = useState("");
   const [photoFile, setPhotoFile] = useState(null);
-
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (!selectedChatUser) return;
+
+    const chatId = getChatId(user.uid, selectedChatUser.uid);
+    const messagesRef = collection(db, "chats", chatId, "messages");
+    const q = query(messagesRef, orderBy("timestamp"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMessages = snapshot.docs.map(doc => doc.data());
+      setMessages(fetchedMessages);
+    });
+
+    return () => unsubscribe();
+  }, [selectedChatUser]);
 
   const handleSendMessage = async () => {
     if (!selectedChatUser || inputText.trim() === "") return;
 
     const chatId = getChatId(user.uid, selectedChatUser.uid);
+    const newMessage = {
+      text: inputText,
+      uid: user.uid,
+      displayName: user.displayName,
+      timestamp: new Date(),
+    };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
 
-    await sendMessageToChat(chatId, inputText, user.uid, user.displayName);
+    const messagesRef = collection(db, "chats", chatId, "messages");
+    await setDoc(doc(messagesRef), newMessage);
     setInputText("");
   };
 
   const handleFileChange = (e) => {
-      if (e?.target?.files?.[0]) {
-        setPhotoFile(e.target.files[0]);
-      }
-    };
-    
+    if (e?.target?.files?.[0]) {
+      setPhotoFile(e.target.files[0]);
+    }
+  };
 
   const handleUploadPhoto = async () => {
     if (!photoFile) return;
@@ -47,39 +63,18 @@ const ChatPage = ({ user }) => {
     setPhotoFile(null);
   };
 
-  useEffect(() => {
-    if (!selectedChatUser) return;
-
-    const chatId = getChatId(user.uid, selectedChatUser.uid);
-
-    const fetchMessages = async () => {
-      const fetchedMessages = await getChatMessages(chatId);
-      setMessages(fetchedMessages);
-    };
-
-    fetchMessages();
-  }, [selectedChatUser]);
-
   return (
     <div style={{ display: "flex", height: "100vh" }}>
-      {/* Sidebar with user list */}
       {user ? (
-  <Sidebar
-    user={user}
-    onLogout={() => auth.signOut()}
-    onProfilePhotoChange={handleFileChange}
-    onSelectUser={setSelectedChatUser}
-  />
-) : null}
+        <Sidebar
+          user={user}
+          onLogout={() => auth.signOut()}
+          onProfilePhotoChange={handleFileChange}
+          onSelectUser={setSelectedChatUser}
+        />
+      ) : null}
 
-
-      {/* Chat section */}
       <div style={{ flex: 1, padding: "16px", overflow: "hidden" }}>
-        <div>
-          <input type="file" onChange={handleFileChange} />
-          <button onClick={handleUploadPhoto}>Upload Profile Photo</button>
-        </div>
-
         {selectedChatUser ? (
           <>
             <h3>Chatting with {selectedChatUser.username}</h3>
@@ -109,6 +104,12 @@ const ChatPage = ({ user }) => {
       </div>
     </div>
   );
+};
+
+const getChatId = (uid1, uid2) => {
+  // Ensure the chat ID is unique by sorting the user IDs (to handle different orderings)
+  const sortedIds = [uid1, uid2].sort();
+  return sortedIds.join("_"); // e.g. "uid1_uid2"
 };
 
 
